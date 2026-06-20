@@ -6,22 +6,15 @@
 <title>Recupera Atlas CRM</title>
 <style>
 :root {
-  --red:#C8102E;
-  --yellow:#D9A300;
-  --graphite:#2B2B2B;
-  --bg:#F4F6F8;
-  --line:#E2E8F0;
-  --muted:#667085;
-  --green:#16A34A;
-  --blue:#2563EB;
-  --orange:#D97706;
+  --red:#C8102E; --yellow:#D9A300; --graphite:#2B2B2B; --bg:#F4F6F8;
+  --line:#E2E8F0; --muted:#667085; --green:#16A34A; --blue:#2563EB; --orange:#D97706;
 }
 * { box-sizing:border-box; }
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--bg); color:var(--graphite); }
 header { background:linear-gradient(135deg,var(--red),#97091F); color:#fff; padding:26px 30px; border-bottom:8px solid var(--yellow); }
 header h1 { margin:0; font-size:36px; letter-spacing:-1px; }
 header p { margin:8px 0 0; font-size:16px; font-weight:600; opacity:.95; }
-main { max-width:1600px; margin:auto; padding:22px; }
+main { max-width:1700px; margin:auto; padding:22px; }
 .grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:18px; }
 .card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(15,23,42,.05); }
 .kpi small { display:block; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
@@ -40,7 +33,6 @@ button { border:0; border-radius:10px; padding:12px 16px; font-weight:900; curso
 .btn-red { background:var(--red); color:#fff; }
 .btn-green { background:var(--green); color:#fff; }
 .btn-yellow { background:var(--yellow); color:#111827; }
-.btn-dark { background:#222; color:#fff; }
 .btn-light { background:#EEF2F7; color:#111827; border:1px solid #CBD5E1; }
 .hint { color:var(--muted); font-size:13px; line-height:1.45; margin-top:12px; }
 .alert { padding:12px 14px; border-radius:10px; border:1px solid #CBD5E1; background:#F8FAFC; min-width:280px; }
@@ -51,8 +43,24 @@ button { border:0; border-radius:10px; padding:12px 16px; font-weight:900; curso
 .rank-card { border:1px solid var(--line); border-radius:14px; padding:14px; background:#fff; }
 .rank-card strong { font-size:18px; }
 .rank-card p { margin:7px 0; color:var(--muted); }
+.calendar-controls { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+.dayname { font-size:12px; font-weight:900; color:var(--muted); text-transform:uppercase; text-align:center; }
+.day { background:#fff; border:1px solid var(--line); border-radius:12px; min-height:120px; padding:9px; overflow:hidden; }
+.day.muted { background:#F8FAFC; color:#98A2B3; }
+.day .num { font-weight:900; margin-bottom:6px; }
+.event { display:block; margin:5px 0; padding:6px 7px; border-radius:8px; font-size:11px; line-height:1.25; cursor:pointer; }
+.event.action { background:#DBEAFE; color:#1E40AF; }
+.event.payment { background:#DCFCE7; color:#166534; }
+.event.overdue { background:#FEE2E2; color:#991B1B; }
+.legend { display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:13px; margin-top:10px; }
+.legend span { display:flex; align-items:center; gap:6px; }
+.dot { width:10px; height:10px; border-radius:99px; display:inline-block; }
+.dot.action { background:#2563EB; }
+.dot.payment { background:#16A34A; }
+.dot.overdue { background:#DC2626; }
 .table-wrap { overflow:auto; max-height:640px; border:1px solid var(--line); border-radius:14px; background:#fff; }
-table { width:100%; border-collapse:separate; border-spacing:0; min-width:1400px; }
+table { width:100%; border-collapse:separate; border-spacing:0; min-width:1700px; }
 th { position:sticky; top:0; background:#F8FAFC; border-bottom:1px solid var(--line); text-align:left; font-size:12px; text-transform:uppercase; color:#475467; z-index:2; }
 th,td { padding:9px; border-bottom:1px solid #EEF2F7; vertical-align:middle; }
 td input, td select { width:100%; padding:8px; border-radius:8px; font-size:13px; }
@@ -64,7 +72,7 @@ td input, td select { width:100%; padding:8px; border-radius:8px; font-size:13px
 .s3 { background:#DCFCE7; color:#166534; }
 .s4 { background:#E5E7EB; color:#374151; }
 .toast { position:fixed; right:20px; bottom:20px; background:#111827; color:#fff; padding:14px 18px; border-radius:12px; display:none; z-index:9; }
-@media(max-width:1000px){ .grid{grid-template-columns:1fr 1fr} .field{width:100%} }
+@media(max-width:1000px){ .grid{grid-template-columns:1fr 1fr} .field{width:100%} .calendar{grid-template-columns:1fr} .dayname{display:none} }
 @media(max-width:640px){ .grid{grid-template-columns:1fr} header h1{font-size:28px} }
 </style>
 </head>
@@ -95,9 +103,7 @@ td input, td select { width:100%; padding:8px; border-radius:8px; font-size:13px
       <button class="btn-light" onclick="loadData()">Atualizar painel</button>
       <div id="importMsg" class="alert">Aguardando arquivo.</div>
     </div>
-    <p class="hint">
-      Ao importar, o sistema substitui a base atual da aba TITULOS pela nova base do CSV. O acompanhamento posterior é feito pelo painel e salvo no Google Sheets.
-    </p>
+    <p class="hint">Ao importar, o sistema substitui a base atual da aba TITULOS pela nova base do CSV. O acompanhamento posterior é salvo no Google Sheets.</p>
     <div id="previewBox" class="preview"></div>
   </section>
 
@@ -128,19 +134,36 @@ td input, td select { width:100%; padding:8px; border-radius:8px; font-size:13px
   </section>
 
   <section class="card">
-    <h2>3. Ranking de recuperação</h2>
+    <div class="calendar-controls">
+      <h2 style="margin:0">3. Calendário de ações e pagamentos</h2>
+      <div class="row">
+        <button class="btn-light" onclick="changeMonth(-1)">◀ Mês anterior</button>
+        <strong id="calendarTitle"></strong>
+        <button class="btn-light" onclick="changeMonth(1)">Próximo mês ▶</button>
+      </div>
+    </div>
+    <div class="calendar" id="calendar"></div>
+    <div class="legend">
+      <span><i class="dot action"></i> Próxima ação</span>
+      <span><i class="dot payment"></i> Pagamento agendado</span>
+      <span><i class="dot overdue"></i> Atrasado</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>4. Ranking de recuperação</h2>
     <div id="ranking" class="ranking">Sem pagamentos registrados.</div>
   </section>
 
   <section class="card">
-    <h2>4. Base de cobrança</h2>
+    <h2>5. Base de cobrança</h2>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>Cliente</th><th>CPF/CNPJ</th><th>Doc</th><th>Vencimento</th><th>Dias</th>
             <th>Valor corr.</th><th>Responsável</th><th>Status</th><th>Recebido</th><th>Premiação</th>
-            <th>Data pag.</th><th>Próxima ação</th><th>Observação</th><th>Salvar</th>
+            <th>Data pag. recebido</th><th>Próxima ação</th><th>Data próxima ação</th><th>Pagamento agendado</th><th>Observação</th><th>Salvar</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -156,6 +179,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbz_52rLI2MoDt_Dxu8D3Fhj
 const BONUS = 0.10;
 let data = [];
 let parsedPreview = [];
+let currentDate = new Date();
 
 function money(v) {
   return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -218,9 +242,11 @@ function parseSGP(text) {
         Responsavel: '',
         Status: 'Não contatado',
         Valor_Recebido: 0,
-        Premiacao: 0,
+        Comissao: 0,
         Data_Pagamento: '',
         Proxima_Acao: '',
+        Data_Proxima_Acao: '',
+        Data_Pagamento_Agendado: '',
         Observacao: '',
         Atualizado_Em: new Date().toISOString()
       });
@@ -314,7 +340,7 @@ async function loadRanking() {
     <div class="rank-card">
       <strong>${i+1}º ${escapeHtml(r.responsavel)}</strong>
       <p>Recuperado: <b>${money(r.recuperado)}</b></p>
-      <p>Premiação 10%: <b>${money(r.comissao)}</b></p>
+      <p>Premiação: <b>${money(r.comissao)}</b></p>
     </div>
   `).join('');
 }
@@ -358,18 +384,25 @@ function render() {
         <td><input class="recebido" value="${recebido ? String(recebido).replace('.',',') : ''}" placeholder="0,00"></td>
         <td class="money">${money(recebido * BONUS)}</td>
         <td><input type="date" class="dataPagamento" value="${formatDateInput(x.Data_Pagamento)}"></td>
-        <td><input class="proximaAcao" value="${escapeAttr(x.Proxima_Acao || '')}" placeholder="Ex: ligar amanhã"></td>
+        <td><input class="proximaAcao" value="${escapeAttr(x.Proxima_Acao || '')}" placeholder="Ex: segundo contato"></td>
+        <td><input type="date" class="dataProximaAcao" value="${formatDateInput(x.Data_Proxima_Acao)}"></td>
+        <td><input type="date" class="dataPagamentoAgendado" value="${formatDateInput(x.Data_Pagamento_Agendado)}"></td>
         <td><input class="observacao" value="${escapeAttr(x.Observacao || '')}" placeholder="Resumo do contato"></td>
         <td><button class="btn-blue" onclick="saveRow('${escapeAttr(id)}')">Salvar</button></td>
       </tr>
     `);
   });
+  renderCalendar();
 }
 
 function formatDateInput(v) {
   if(!v) return '';
   const s = String(v);
   if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+    const [d,m,y] = s.split('/');
+    return `${y}-${m}-${d}`;
+  }
   return '';
 }
 
@@ -384,6 +417,8 @@ async function saveRow(id) {
     Valor_Recebido: parseMoney(tr.querySelector('.recebido').value),
     Data_Pagamento: tr.querySelector('.dataPagamento').value,
     Proxima_Acao: tr.querySelector('.proximaAcao').value,
+    Data_Proxima_Acao: tr.querySelector('.dataProximaAcao').value,
+    Data_Pagamento_Agendado: tr.querySelector('.dataPagamentoAgendado').value,
     Observacao: tr.querySelector('.observacao').value
   };
   try {
@@ -405,9 +440,59 @@ async function saveRow(id) {
   }
 }
 
+function renderCalendar() {
+  const cal = document.getElementById('calendar');
+  const y = currentDate.getFullYear();
+  const m = currentDate.getMonth();
+  document.getElementById('calendarTitle').textContent = currentDate.toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
+  cal.innerHTML = '';
+  ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d => cal.insertAdjacentHTML('beforeend', `<div class="dayname">${d}</div>`));
+  const first = new Date(y,m,1);
+  const startDay = first.getDay();
+  const daysInMonth = new Date(y,m+1,0).getDate();
+  const prevDays = new Date(y,m,0).getDate();
+  for(let i=startDay-1;i>=0;i--) {
+    cal.insertAdjacentHTML('beforeend', `<div class="day muted"><div class="num">${prevDays-i}</div></div>`);
+  }
+  for(let d=1; d<=daysInMonth; d++) {
+    const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const events = getEventsForDate(iso);
+    cal.insertAdjacentHTML('beforeend', `<div class="day"><div class="num">${d}</div>${events}</div>`);
+  }
+}
+
+function getEventsForDate(iso) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dateObj = new Date(iso + 'T00:00:00');
+  let html = '';
+  data.forEach(x => {
+    const actionDate = formatDateInput(x.Data_Proxima_Acao);
+    const payDate = formatDateInput(x.Data_Pagamento_Agendado);
+    const cliente = escapeHtml(x.Cliente || '');
+    const resp = escapeHtml(x.Responsavel || 'Sem responsável');
+    if(actionDate === iso) {
+      const cls = dateObj < today && x.Status !== 'Pago' ? 'event overdue' : 'event action';
+      html += `<span class="${cls}" title="${cliente}">Ação: ${cliente}<br><small>${resp}</small></span>`;
+    }
+    if(payDate === iso) {
+      const cls = dateObj < today && x.Status !== 'Pago' ? 'event overdue' : 'event payment';
+      html += `<span class="${cls}" title="${cliente}">Pag.: ${cliente}<br><small>${money(x.Valor_Corrigido)}</small></span>`;
+    }
+  });
+  return html;
+}
+
+function changeMonth(delta) {
+  currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth()+delta, 1);
+  renderCalendar();
+}
+
 function exportCSV() {
-  const headers = ['Cliente','CPF_CNPJ','Documento','Vencimento','Dias_Atraso','Valor_Corrigido','Responsavel','Status','Valor_Recebido','Premiacao','Data_Pagamento','Proxima_Acao','Observacao'];
-  const lines = [headers.join(';')].concat(data.map(x => headers.map(h => `"${String(x[h] ?? '').replace(/"/g,'""')}"`).join(';')));
+  const headers = ['Cliente','CPF_CNPJ','Documento','Vencimento','Dias_Atraso','Valor_Corrigido','Responsavel','Status','Valor_Recebido','Premiacao','Data_Pagamento','Proxima_Acao','Data_Proxima_Acao','Data_Pagamento_Agendado','Observacao'];
+  const lines = [headers.join(';')].concat(data.map(x => headers.map(h => {
+    const key = h === 'Premiacao' ? 'Comissao' : h;
+    return `"${String(x[key] ?? '').replace(/"/g,'""')}"`;
+  }).join(';')));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'}));
   a.download = 'recupera-atlas-acompanhamento.csv';
