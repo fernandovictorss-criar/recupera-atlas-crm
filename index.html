@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recupera Atlas CRM</title>
+<style>
+:root {
+  --red:#C8102E;
+  --yellow:#D9A300;
+  --graphite:#2B2B2B;
+  --bg:#F4F6F8;
+  --line:#E2E8F0;
+  --muted:#667085;
+  --green:#16A34A;
+  --blue:#2563EB;
+  --orange:#D97706;
+}
+* { box-sizing:border-box; }
+body { margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--bg); color:var(--graphite); }
+header { background:linear-gradient(135deg,var(--red),#97091F); color:#fff; padding:26px 30px; border-bottom:8px solid var(--yellow); }
+header h1 { margin:0; font-size:36px; letter-spacing:-1px; }
+header p { margin:8px 0 0; font-size:16px; font-weight:600; opacity:.95; }
+main { max-width:1600px; margin:auto; padding:22px; }
+.grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:18px; }
+.card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(15,23,42,.05); }
+.kpi small { display:block; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+.kpi strong { display:block; font-size:29px; margin:10px 0 4px; }
+.kpi span { color:var(--muted); font-size:14px; }
+.progress { height:10px; background:#E5E7EB; border-radius:99px; overflow:hidden; margin-top:10px; }
+.progress div { height:100%; background:var(--green); width:0%; }
+h2 { margin:0 0 14px; font-size:24px; }
+.row { display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
+.field { display:flex; flex-direction:column; gap:6px; }
+label { font-weight:800; color:#344054; font-size:13px; }
+input, select, textarea { border:1px solid #CBD5E1; border-radius:10px; padding:11px; font-size:14px; background:#fff; }
+input[type=file] { padding:9px; }
+button { border:0; border-radius:10px; padding:12px 16px; font-weight:900; cursor:pointer; }
+.btn-blue { background:var(--blue); color:#fff; }
+.btn-red { background:var(--red); color:#fff; }
+.btn-green { background:var(--green); color:#fff; }
+.btn-yellow { background:var(--yellow); color:#111827; }
+.btn-dark { background:#222; color:#fff; }
+.btn-light { background:#EEF2F7; color:#111827; border:1px solid #CBD5E1; }
+.hint { color:var(--muted); font-size:13px; line-height:1.45; margin-top:12px; }
+.alert { padding:12px 14px; border-radius:10px; border:1px solid #CBD5E1; background:#F8FAFC; min-width:280px; }
+.alert.ok { border-color:#86EFAC; background:#F0FDF4; color:#166534; }
+.alert.err { border-color:#FCA5A5; background:#FEF2F2; color:#991B1B; }
+.preview { max-height:220px; overflow:auto; background:#0F172A; color:#E2E8F0; border-radius:12px; padding:12px; font-family:monospace; font-size:12px; white-space:pre; margin-top:14px; display:none; }
+.ranking { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
+.rank-card { border:1px solid var(--line); border-radius:14px; padding:14px; background:#fff; }
+.rank-card strong { font-size:18px; }
+.rank-card p { margin:7px 0; color:var(--muted); }
+.table-wrap { overflow:auto; max-height:640px; border:1px solid var(--line); border-radius:14px; background:#fff; }
+table { width:100%; border-collapse:separate; border-spacing:0; min-width:1400px; }
+th { position:sticky; top:0; background:#F8FAFC; border-bottom:1px solid var(--line); text-align:left; font-size:12px; text-transform:uppercase; color:#475467; z-index:2; }
+th,td { padding:9px; border-bottom:1px solid #EEF2F7; vertical-align:middle; }
+td input, td select { width:100%; padding:8px; border-radius:8px; font-size:13px; }
+.money { text-align:right; font-variant-numeric:tabular-nums; }
+.badge { display:inline-block; padding:5px 8px; border-radius:999px; font-size:12px; font-weight:800; }
+.s0 { background:#FEE2E2; color:#991B1B; }
+.s1 { background:#FEF3C7; color:#92400E; }
+.s2 { background:#DBEAFE; color:#1E40AF; }
+.s3 { background:#DCFCE7; color:#166534; }
+.s4 { background:#E5E7EB; color:#374151; }
+.toast { position:fixed; right:20px; bottom:20px; background:#111827; color:#fff; padding:14px 18px; border-radius:12px; display:none; z-index:9; }
+@media(max-width:1000px){ .grid{grid-template-columns:1fr 1fr} .field{width:100%} }
+@media(max-width:640px){ .grid{grid-template-columns:1fr} header h1{font-size:28px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Recupera Atlas CRM</h1>
+  <p>Gestão colaborativa de inadimplentes cancelados • Google Sheets + comissão automática de 10%</p>
+</header>
+
+<main>
+  <section class="grid">
+    <div class="card kpi"><small>Total em aberto</small><strong id="kpiAberto">R$ 0,00</strong><span>Base no Google Sheets</span></div>
+    <div class="card kpi"><small>Total recuperado</small><strong id="kpiRec">R$ 0,00</strong><span>Pagamentos recebidos</span></div>
+    <div class="card kpi"><small>Bônus 10%</small><strong id="kpiBonus">R$ 0,00</strong><span>Comissão do time</span></div>
+    <div class="card kpi"><small>Títulos</small><strong id="kpiTitulos">0</strong><span>Registros ativos</span></div>
+    <div class="card kpi"><small>Taxa recuperada</small><strong id="kpiTaxa">0%</strong><div class="progress"><div id="barTaxa"></div></div></div>
+  </section>
+
+  <section class="card">
+    <h2>1. Importar base CSV do SGP</h2>
+    <div class="row">
+      <div class="field" style="min-width:360px;flex:1">
+        <label>Arquivo exportado do SGP</label>
+        <input type="file" id="fileInput" accept=".csv,.txt">
+      </div>
+      <button class="btn-blue" onclick="previewCSV()">Pré-visualizar</button>
+      <button class="btn-red" onclick="importCSV()">Importar para Google Sheets</button>
+      <button class="btn-light" onclick="loadData()">Atualizar painel</button>
+      <div id="importMsg" class="alert">Aguardando arquivo.</div>
+    </div>
+    <p class="hint">
+      Ao importar, o sistema substitui a base atual da aba TITULOS pela nova base do CSV. O acompanhamento posterior é feito pelo painel e salvo no Google Sheets.
+    </p>
+    <div id="previewBox" class="preview"></div>
+  </section>
+
+  <section class="card">
+    <h2>2. Filtros</h2>
+    <div class="row">
+      <div class="field" style="min-width:300px;flex:2">
+        <label>Buscar cliente, CPF ou documento</label>
+        <input id="searchInput" placeholder="Digite para filtrar..." oninput="render()">
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="statusFilter" onchange="render()">
+          <option value="">Todos</option>
+          <option>Não contatado</option>
+          <option>Em contato</option>
+          <option>Promessa de pagamento</option>
+          <option>Pago</option>
+          <option>Sem acordo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Responsável</label>
+        <input id="respFilter" placeholder="Ex: Taís" oninput="render()">
+      </div>
+      <button class="btn-green" onclick="exportCSV()">Exportar acompanhamento CSV</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>3. Ranking de recuperação</h2>
+    <div id="ranking" class="ranking">Sem pagamentos registrados.</div>
+  </section>
+
+  <section class="card">
+    <h2>4. Base de cobrança</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th><th>CPF/CNPJ</th><th>Doc</th><th>Vencimento</th><th>Dias</th>
+            <th>Valor corr.</th><th>Responsável</th><th>Status</th><th>Recebido</th><th>Bônus</th>
+            <th>Data pag.</th><th>Próxima ação</th><th>Observação</th><th>Salvar</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbz_52rLI2MoDt_Dxu8D3FhjXNegV1Ak0RCPyTdyqLzn_ioMDIoEJpi5-m5-7BZte8VxjA/exec";
+const BONUS = 0.10;
+let data = [];
+let parsedPreview = [];
+
+function money(v) {
+  return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+function parseMoney(s) {
+  if(s === undefined || s === null) return 0;
+  s = String(s).trim().replace(/[R$\s"]/g,'');
+  if(!s) return 0;
+  if(s.includes(',') && s.includes('.')) s = s.replace(/\./g,'').replace(',','.');
+  else if(s.includes(',')) s = s.replace(',','.');
+  return Number(s) || 0;
+}
+
+function stripQuotes(s) {
+  return String(s || '').replace(/^"+|"+$/g,'').trim();
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(()=> el.style.display = 'none', 3000);
+}
+
+function setMsg(text, type='') {
+  const el = document.getElementById('importMsg');
+  el.textContent = text;
+  el.className = 'alert ' + type;
+}
+
+function decodeFile(file, cb) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const bytes = new Uint8Array(reader.result);
+    let text = new TextDecoder('utf-8').decode(bytes);
+    if((text.match(/�/g)||[]).length > 3) text = new TextDecoder('windows-1252').decode(bytes);
+    cb(text);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseSGP(text) {
+  const raw = text.split(/\r?\n/).map(stripQuotes);
+  const out = [];
+  const re = /^(.+?)\s{2,}(\d{3}\.?\d{3}\.?\d{3}-\d{2}|\d{2}\.?\d{3}\.?\d{3}\/\d{4}-\d{2})\s+(\d+)\s+(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+([\d.,]+)\s+(.+?)\s+([\d.,]+)\s*$/;
+  for(const line of raw) {
+    if(!line) continue;
+    if(/^(Relatório|Data Doc|valor -|Total|Cliente\s+CPF|Centro de custo|Página)/i.test(line)) continue;
+    const m = line.match(re);
+    if(m) {
+      out.push({
+        ID: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()),
+        Cliente: m[1].replace(/\s+/g,' ').trim(),
+        CPF_CNPJ: m[2].trim(),
+        Documento: m[3].trim(),
+        Vencimento: m[5],
+        Dias_Atraso: Number(m[6]) || 0,
+        Valor_Corrigido: parseMoney(m[9]),
+        Responsavel: '',
+        Status: 'Não contatado',
+        Valor_Recebido: 0,
+        Comissao: 0,
+        Data_Pagamento: '',
+        Proxima_Acao: '',
+        Observacao: '',
+        Atualizado_Em: new Date().toISOString()
+      });
+    }
+  }
+  return out;
+}
+
+function getFile() {
+  return document.getElementById('fileInput').files[0];
+}
+
+function previewCSV() {
+  const f = getFile();
+  if(!f) return alert('Selecione um arquivo CSV.');
+  decodeFile(f, text => {
+    parsedPreview = parseSGP(text);
+    const box = document.getElementById('previewBox');
+    box.style.display = 'block';
+    box.textContent = `Pré-visualização: ${parsedPreview.length} títulos encontrados\n\n` +
+      parsedPreview.slice(0,15).map(x => `${x.Cliente} | ${x.CPF_CNPJ} | Doc ${x.Documento} | ${money(x.Valor_Corrigido)}`).join('\n');
+    setMsg(`Pré-visualização concluída: ${parsedPreview.length} títulos encontrados.`, parsedPreview.length ? 'ok' : 'err');
+  });
+}
+
+async function importCSV() {
+  const f = getFile();
+  if(!f) return alert('Selecione um arquivo CSV.');
+  decodeFile(f, async text => {
+    const titulos = parseSGP(text);
+    if(!titulos.length) {
+      setMsg('Nenhum título válido encontrado no CSV.', 'err');
+      return;
+    }
+    if(!confirm(`Importar ${titulos.length} títulos para o Google Sheets? A base atual será substituída.`)) return;
+    setMsg('Importando para o Google Sheets...', '');
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action:'importar', titulos }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+      });
+      const json = await res.json();
+      if(json.status) {
+        setMsg(`Importação concluída: ${json.quantidade} títulos.`, 'ok');
+        await loadData();
+      } else {
+        setMsg(json.mensagem || 'Erro na importação.', 'err');
+      }
+    } catch(err) {
+      setMsg('Erro de conexão com Apps Script. Verifique a publicação da API.', 'err');
+      console.error(err);
+    }
+  });
+}
+
+async function loadData() {
+  try {
+    const res = await fetch(API_URL + '?action=listar');
+    data = await res.json();
+    render();
+    await loadDashboard();
+    await loadRanking();
+  } catch(err) {
+    toast('Erro ao carregar dados.');
+    console.error(err);
+  }
+}
+
+async function loadDashboard() {
+  const res = await fetch(API_URL + '?action=dashboard');
+  const d = await res.json();
+  document.getElementById('kpiAberto').textContent = money(d.aberto);
+  document.getElementById('kpiRec').textContent = money(d.recuperado);
+  document.getElementById('kpiBonus').textContent = money(d.comissao);
+  document.getElementById('kpiTitulos').textContent = d.titulos || 0;
+  const pct = Number(d.percentual || 0);
+  document.getElementById('kpiTaxa').textContent = pct.toFixed(1).replace('.',',') + '%';
+  document.getElementById('barTaxa').style.width = Math.min(100,pct) + '%';
+}
+
+async function loadRanking() {
+  const res = await fetch(API_URL + '?action=ranking');
+  const ranking = await res.json();
+  const el = document.getElementById('ranking');
+  if(!ranking.length) {
+    el.textContent = 'Sem pagamentos registrados.';
+    return;
+  }
+  el.innerHTML = ranking.map((r,i)=>`
+    <div class="rank-card">
+      <strong>${i+1}º ${escapeHtml(r.responsavel)}</strong>
+      <p>Recuperado: <b>${money(r.recuperado)}</b></p>
+      <p>Bônus 10%: <b>${money(r.comissao)}</b></p>
+    </div>
+  `).join('');
+}
+
+function filtered() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const st = document.getElementById('statusFilter').value;
+  const rp = document.getElementById('respFilter').value.toLowerCase();
+  return data.filter(x =>
+    (!q || [x.Cliente,x.CPF_CNPJ,x.Documento].join(' ').toLowerCase().includes(q)) &&
+    (!st || x.Status === st) &&
+    (!rp || String(x.Responsavel||'').toLowerCase().includes(rp))
+  );
+}
+
+function statusClass(s) {
+  return s === 'Pago' ? 's3' : s === 'Promessa de pagamento' ? 's2' : s === 'Em contato' ? 's1' : s === 'Sem acordo' ? 's4' : 's0';
+}
+
+function render() {
+  const tb = document.getElementById('tbody');
+  tb.innerHTML = '';
+  filtered().forEach(x => {
+    const id = String(x.ID || '');
+    const recebido = Number(x.Valor_Recebido || 0);
+    tb.insertAdjacentHTML('beforeend', `
+      <tr data-id="${escapeAttr(id)}">
+        <td>${escapeHtml(x.Cliente)}</td>
+        <td>${escapeHtml(x.CPF_CNPJ)}</td>
+        <td>${escapeHtml(x.Documento)}</td>
+        <td>${escapeHtml(x.Vencimento)}</td>
+        <td>${escapeHtml(x.Dias_Atraso)}</td>
+        <td class="money">${money(x.Valor_Corrigido)}</td>
+        <td><input class="responsavel" value="${escapeAttr(x.Responsavel || '')}" placeholder="Responsável"></td>
+        <td>
+          <select class="status">
+            ${['Não contatado','Em contato','Promessa de pagamento','Pago','Sem acordo'].map(s=>`<option ${x.Status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <div style="margin-top:4px"><span class="badge ${statusClass(x.Status)}">${escapeHtml(x.Status || 'Não contatado')}</span></div>
+        </td>
+        <td><input class="recebido" value="${recebido ? String(recebido).replace('.',',') : ''}" placeholder="0,00"></td>
+        <td class="money">${money(recebido * BONUS)}</td>
+        <td><input type="date" class="dataPagamento" value="${formatDateInput(x.Data_Pagamento)}"></td>
+        <td><input class="proximaAcao" value="${escapeAttr(x.Proxima_Acao || '')}" placeholder="Ex: ligar amanhã"></td>
+        <td><input class="observacao" value="${escapeAttr(x.Observacao || '')}" placeholder="Resumo do contato"></td>
+        <td><button class="btn-blue" onclick="saveRow('${escapeAttr(id)}')">Salvar</button></td>
+      </tr>
+    `);
+  });
+}
+
+function formatDateInput(v) {
+  if(!v) return '';
+  const s = String(v);
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  return '';
+}
+
+async function saveRow(id) {
+  const tr = document.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
+  if(!tr) return;
+  const payload = {
+    action:'atualizar',
+    ID:id,
+    Responsavel: tr.querySelector('.responsavel').value,
+    Status: tr.querySelector('.status').value,
+    Valor_Recebido: parseMoney(tr.querySelector('.recebido').value),
+    Data_Pagamento: tr.querySelector('.dataPagamento').value,
+    Proxima_Acao: tr.querySelector('.proximaAcao').value,
+    Observacao: tr.querySelector('.observacao').value
+  };
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST',
+      body: JSON.stringify(payload),
+      headers: { 'Content-Type':'text/plain;charset=utf-8' }
+    });
+    const json = await res.json();
+    if(json.status) {
+      toast('Título salvo no Google Sheets.');
+      await loadData();
+    } else {
+      toast(json.mensagem || 'Não foi possível salvar.');
+    }
+  } catch(err) {
+    toast('Erro ao salvar.');
+    console.error(err);
+  }
+}
+
+function exportCSV() {
+  const headers = ['Cliente','CPF_CNPJ','Documento','Vencimento','Dias_Atraso','Valor_Corrigido','Responsavel','Status','Valor_Recebido','Comissao','Data_Pagamento','Proxima_Acao','Observacao'];
+  const lines = [headers.join(';')].concat(data.map(x => headers.map(h => `"${String(x[h] ?? '').replace(/"/g,'""')}"`).join(';')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'}));
+  a.download = 'recupera-atlas-acompanhamento.csv';
+  a.click();
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function escapeAttr(s) {
+  return escapeHtml(s).replace(/`/g,'&#96;');
+}
+
+loadData();
+</script>
+</body>
+</html>
