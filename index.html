@@ -71,14 +71,14 @@ td input, td select { width:100%; padding:8px; border-radius:8px; font-size:13px
 <body>
 <header>
   <h1>Recupera Atlas CRM</h1>
-  <p>Gestão colaborativa de inadimplentes cancelados • Google Sheets + comissão automática de 10%</p>
+  <p>Gestão colaborativa da recuperação de crédito • Google Sheets + premiação automática de 10%</p>
 </header>
 
 <main>
   <section class="grid">
     <div class="card kpi"><small>Total em aberto</small><strong id="kpiAberto">R$ 0,00</strong><span>Base no Google Sheets</span></div>
     <div class="card kpi"><small>Total recuperado</small><strong id="kpiRec">R$ 0,00</strong><span>Pagamentos recebidos</span></div>
-    <div class="card kpi"><small>Bônus 10%</small><strong id="kpiBonus">R$ 0,00</strong><span>Comissão do time</span></div>
+    <div class="card kpi"><small>Premiação 10%</small><strong id="kpiBonus">R$ 0,00</strong><span>Premiação do time</span></div>
     <div class="card kpi"><small>Títulos</small><strong id="kpiTitulos">0</strong><span>Registros ativos</span></div>
     <div class="card kpi"><small>Taxa recuperada</small><strong id="kpiTaxa">0%</strong><div class="progress"><div id="barTaxa"></div></div></div>
   </section>
@@ -139,7 +139,7 @@ td input, td select { width:100%; padding:8px; border-radius:8px; font-size:13px
         <thead>
           <tr>
             <th>Cliente</th><th>CPF/CNPJ</th><th>Doc</th><th>Vencimento</th><th>Dias</th>
-            <th>Valor corr.</th><th>Responsável</th><th>Status</th><th>Recebido</th><th>Bônus</th>
+            <th>Valor corr.</th><th>Responsável</th><th>Status</th><th>Recebido</th><th>Premiação</th>
             <th>Data pag.</th><th>Próxima ação</th><th>Observação</th><th>Salvar</th>
           </tr>
         </thead>
@@ -218,7 +218,7 @@ function parseSGP(text) {
         Responsavel: '',
         Status: 'Não contatado',
         Valor_Recebido: 0,
-        Comissao: 0,
+        Premiacao: 0,
         Data_Pagamento: '',
         Proxima_Acao: '',
         Observacao: '',
@@ -314,7 +314,7 @@ async function loadRanking() {
     <div class="rank-card">
       <strong>${i+1}º ${escapeHtml(r.responsavel)}</strong>
       <p>Recuperado: <b>${money(r.recuperado)}</b></p>
-      <p>Bônus 10%: <b>${money(r.comissao)}</b></p>
+      <p>Premiação 10%: <b>${money(r.comissao)}</b></p>
     </div>
   `).join('');
 }
@@ -406,7 +406,7 @@ async function saveRow(id) {
 }
 
 function exportCSV() {
-  const headers = ['Cliente','CPF_CNPJ','Documento','Vencimento','Dias_Atraso','Valor_Corrigido','Responsavel','Status','Valor_Recebido','Comissao','Data_Pagamento','Proxima_Acao','Observacao'];
+  const headers = ['Cliente','CPF_CNPJ','Documento','Vencimento','Dias_Atraso','Valor_Corrigido','Responsavel','Status','Valor_Recebido','Premiacao','Data_Pagamento','Proxima_Acao','Observacao'];
   const lines = [headers.join(';')].concat(data.map(x => headers.map(h => `"${String(x[h] ?? '').replace(/"/g,'""')}"`).join(';')));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'}));
